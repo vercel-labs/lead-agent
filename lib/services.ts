@@ -10,6 +10,7 @@ import {
   QualificationSchema,
   qualificationSchema
 } from '@/lib/types';
+import { sendSlackMessageWithButtons } from '@/lib/slack';
 
 /**
  * Qualify the lead
@@ -63,9 +64,11 @@ export async function humanFeedback(
   email: string,
   qualification: QualificationSchema
 ) {
-  /**
-   * Send the research and qualification to the human for approval in slack
-   */
+  const message = `*New Lead Qualification*\n\n*Email:* ${email}\n*Category:* ${qualification.category}\n*Reason:* ${qualification.reason}\n\n*Research:*\n${research}\n\n*Please review and approve or reject this email*`;
+
+  const slackChannel = process.env.SLACK_CHANNEL_ID || '';
+
+  return await sendSlackMessageWithButtons(slackChannel, message);
 }
 
 /**
