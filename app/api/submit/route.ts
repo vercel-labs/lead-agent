@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   }
   const { data } = parsedBody;
 
+  // in a production environment, we would use a queue to process the leads instead of using after
   after(async () => {
     const qualification = await qualify(data);
 
