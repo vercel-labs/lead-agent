@@ -1,10 +1,8 @@
 'use client';
 
-import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import * as z from 'zod';
-
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -17,25 +15,8 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
-const formSchema = z.object({
-  email: z.email('Please enter a valid email address.'),
-  name: z
-    .string()
-    .min(2, 'Name is required')
-    .max(50, 'Name must be at most 50 characters.'),
-  phone: z
-    .string()
-    .regex(/^[\d\s\-\+\(\)]+$/, 'Please enter a valid phone number.')
-    .min(10, 'Phone number must be at least 10 digits.')
-    .optional()
-    .or(z.literal('')),
-  company: z.string().optional().or(z.literal('')),
-  message: z
-    .string()
-    .min(10, 'Message is required')
-    .max(500, 'Message must be less than 500 characters.')
-});
+import { formSchema } from '@/lib/schema';
+import { toast } from 'sonner';
 
 export function LeadForm() {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -49,15 +30,22 @@ export function LeadForm() {
     }
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    console.log('Form submitted:', data);
-    // Handle form submission here
-    alert('Form submitted! Check the console for details.');
-    form.reset();
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    const response = await fetch('/api/submit', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      toast.success('Form submitted successfully');
+      form.reset();
+    } else {
+      toast.error('Form submission failed');
+    }
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
+    <div className="mx-auto max-w-xl p-6">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FieldSet>
           <FieldLegend>Contact Information</FieldLegend>
