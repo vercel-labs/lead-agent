@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { formSchema } from '@/lib/schema';
+import { formSchema } from '@/lib/types';
 import { toast } from 'sonner';
 
 export function LeadForm() {
