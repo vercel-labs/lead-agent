@@ -18,31 +18,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-// List of common free email providers to exclude
-const freeEmailProviders = [
-  'gmail.com',
-  'yahoo.com',
-  'hotmail.com',
-  'outlook.com',
-  'live.com',
-  'aol.com',
-  'icloud.com',
-  'mail.com',
-  'protonmail.com',
-  'yandex.com',
-  'zoho.com'
-];
-
 const formSchema = z.object({
-  email: z.email('Please enter a valid email address.').refine(
-    (email) => {
-      const domain = email.split('@')[1]?.toLowerCase();
-      return domain && !freeEmailProviders.includes(domain);
-    },
-    {
-      message: 'Please use a business email address.'
-    }
-  ),
+  email: z.email('Please enter a valid email address.'),
   name: z
     .string()
     .min(2, 'Name is required')
