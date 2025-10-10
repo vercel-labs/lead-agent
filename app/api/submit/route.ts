@@ -1,9 +1,12 @@
 import { formSchema } from '@/lib/types';
 import { after } from 'next/server';
-import { qualify, writeEmail } from '@/lib/ai';
-import { queryKnowledgeBase } from '@/lib/knowledge';
-import { deepResearch } from '@/lib/research';
-import { humanFeedback } from '@/lib/slack';
+import {
+  queryKnowledgeBase,
+  deepResearch,
+  humanFeedback,
+  qualify,
+  writeEmail
+} from '@/lib/services';
 
 export async function POST(request: Request) {
   const body = await request.json();
