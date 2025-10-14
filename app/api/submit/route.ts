@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       qualification.category === 'FOLLOW_UP'
     ) {
       const { text: research } = await researchAgent.generate({
-        prompt: `Research the lead ${JSON.stringify(data)}`
+        prompt: `Research the lead: ${JSON.stringify(data)}`
       });
       const email = await writeEmail(research, qualification);
       await humanFeedback(research, email, qualification);
