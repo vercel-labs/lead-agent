@@ -27,9 +27,7 @@ Immediate response
      ↓
 after() → Qualify lead
      ↓
-Query knowledge base
-     ↓
-Deep research
+Research agent
      ↓
 Generate email
      ↓
@@ -127,6 +125,10 @@ The `/api/submit` endpoint leverages Next.js' `after()` function to return an im
 
 Leads are automatically categorized (QUALIFIED, FOLLOW_UP, etc.) using GPT-5, with reasoning provided for each qualification decision.
 
+### AI SDK Agent class
+
+Uses the AI SDK Agent class to create an autonomous research agent.
+
 ### Human-in-the-Loop Workflow
 
 Generated emails are sent to Slack with approve/reject buttons, ensuring human oversight before any outbound communication.
@@ -139,40 +141,11 @@ Generated emails are sent to Slack with approve/reject buttons, ensuring human o
 
 ## Customization
 
-### Adding Knowledge Base Integration
+Most of the logic lives in the `services.ts` and `api/submit/route.ts` files.
 
-Edit `lib/services.ts` in the `queryKnowledgeBase` function:
+### Adjusting agent
 
-```typescript
-export async function queryKnowledgeBase(query: string) {
-  // Add your vector DB integration here
-  // Example: Turbopuffer, Pinecone, Postgres with pgvector
-  return 'Context from knowledge base';
-}
-```
-
-### Adjusting Deep Research
-
-Edit `lib/services.ts` in the `deepResearch` function:
-
-```typescript
-export async function deepResearch(query: string, context: string) {
-  // Add your research provider here
-  // Example: Exa.ai, Perplexity, etc.
-  return 'Results from research';
-}
-```
-
-### Adding Email Provider
-
-Edit `lib/services.ts` in the `sendEmail` function:
-
-```typescript
-export async function sendEmail(email: string) {
-  // Add your email provider here
-  // Example: SendGrid, Mailgun, Resend, etc.
-}
-```
+Edit the `researchAgent` in `lib/services.ts`.
 
 ## Deployment
 
