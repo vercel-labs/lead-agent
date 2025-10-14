@@ -11,6 +11,7 @@ import {
   qualificationSchema
 } from '@/lib/types';
 import { sendSlackMessageWithButtons } from '@/lib/slack';
+import { z } from 'zod';
 
 /**
  * Qualify the lead
@@ -45,18 +46,6 @@ export async function writeEmail(
 }
 
 /**
- * Query the knowledge base
- */
-export async function queryKnowledgeBase(query: string) {
-  /**
-   * Query the knowledge base for the given query
-   * - ex: pull from turbopuffer, pinecone, postgres, snowflake, etc.
-   * Return the context from the knowledge base
-   */
-  return 'Context from knowledge base';
-}
-
-/**
  * Send the research and qualification to the human for approval in slack
  */
 export async function humanFeedback(
@@ -83,10 +72,58 @@ export async function sendEmail(email: string) {
 /**
  * Deep research
  */
-export async function deepResearch(query: string, context: string) {
-  /**
-   * Deep research using exa.ai
-   * Return the results in markdown format
-   */
-  return 'Results from research';
-}
+const deepResearch = tool({
+  description: 'Deep research using exa.ai for the given query',
+  inputSchema: z.object({
+    query: z.string()
+  }),
+  execute: async ({ query }: { query: string }) => {
+    /**
+     * Deep research using exa.ai
+     * Return the results in markdown format
+     */
+    return 'Results from research';
+  }
+});
+
+/**
+ * Query the knowledge base
+ */
+const queryKnowledgeBase = tool({
+  description: 'Query the knowledge base for the given query',
+  inputSchema: z.object({
+    query: z.string()
+  }),
+  execute: async ({ query }: { query: string }) => {
+    /**
+     * Query the knowledge base for the given query
+     * - ex: pull from turbopuffer, pinecone, postgres, snowflake, etc.
+     * Return the context from the knowledge base
+     */
+    return 'Context from knowledge base';
+  }
+});
+
+/**
+ * Research agent
+ *
+ * This agent is used to research the lead and return a comprehensive report
+ */
+export const researchAgent = new Agent({
+  model: 'openai/gpt-5-mini',
+  system: `
+  You are a researcher to find information about a lead. 
+  
+  You can use the tools provided to you to find information about the lead. 
+  - deepResearch: Deep research using exa.ai for the given query
+  - queryKnowledgeBase: Query the knowledge base for the given query
+  
+  Synthesize the information you find into a comprehensive report.
+  `,
+  tools: {
+    deepResearch,
+    queryKnowledgeBase
+  },
+  toolChoice: 'required',
+  stopWhen: [stepCountIs(3)]
+});

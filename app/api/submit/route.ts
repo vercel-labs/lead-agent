@@ -1,8 +1,7 @@
 import { formSchema } from '@/lib/types';
 import { after } from 'next/server';
 import {
-  queryKnowledgeBase,
-  deepResearch,
+  researchAgent,
   humanFeedback,
   qualify,
   writeEmail
@@ -24,8 +23,9 @@ export async function POST(request: Request) {
       qualification.category === 'QUALIFIED' ||
       qualification.category === 'FOLLOW_UP'
     ) {
-      const context = await queryKnowledgeBase(data.message);
-      const research = await deepResearch(data.message, context);
+      const { text: research } = await researchAgent.generate({
+        prompt: `Research the lead ${JSON.stringify(data)}`
+      });
       const email = await writeEmail(research, qualification);
       await humanFeedback(research, email, qualification);
     }
