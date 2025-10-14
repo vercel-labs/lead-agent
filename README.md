@@ -2,6 +2,8 @@
 
 An inbound lead qualification and research agent built with Next.js and hosted on Vercel AI cloud.
 
+## Background
+
 ## Overview
 
 Lead agent app that captures a lead in a contact sales form and then kicks off a qualification workflow & agent.
