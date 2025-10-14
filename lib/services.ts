@@ -54,7 +54,12 @@ export async function humanFeedback(
   email: string,
   qualification: QualificationSchema
 ) {
-  const message = `*New Lead Qualification*\n\n*Email:* ${email}\n*Category:* ${qualification.category}\n*Reason:* ${qualification.reason}\n\n*Research:*\n${research}\n\n*Please review and approve or reject this email*`;
+  const message = `*New Lead Qualification*\n\n*Email:* ${email}\n*Category:* ${
+    qualification.category
+  }\n*Reason:* ${qualification.reason}\n\n*Research:*\n${research.slice(
+    0,
+    500
+  )}...\n\n*Please review and approve or reject this email*`;
 
   const slackChannel = process.env.SLACK_CHANNEL_ID || '';
 
@@ -149,6 +154,5 @@ export const researchAgent = new Agent({
     queryKnowledgeBase
     // add other tools here, ex: query CRM, snowflake, etc.
   },
-  toolChoice: 'required',
-  stopWhen: [stepCountIs(10)] // stop after max 10 steps
+  stopWhen: [stepCountIs(20)] // stop after max 20 steps
 });
