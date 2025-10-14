@@ -1,16 +1,18 @@
 # Lead Agent
 
-An intelligent lead qualification and response system built with Next.js 15, leveraging the `after()` function for asynchronous background processing and AI-powered lead analysis.
+An intelligent lead qualification and response system built with Next.js.
 
 ## Overview
 
-This application captures leads through a web form and automatically processes them through a multi-stage pipeline:
+Lead agent app that captures a lead in a contact sales form and then kicks off a qualification workflow & agent.
 
-1. **Immediate Response** - Returns a success response to the user instantly
+**Overall this template is a reference architecture for how to build a lead agent on Vercel. Aspects of this project should be adjusted to meet your business' needs.**
+
+1. **Immediate Response** - Returns a success response to the user upon submission
 2. **Background Processing** - Uses Next.js `after()` to kick off asynchronous tasks:
-   - **Qualify Lead** - AI-powered lead qualification and categorization
+   - **Qualify Lead** - Uses `generateObject` to categorize the lead
    - **Query Knowledge Base** - Retrieves relevant context from your knowledge base
-   - **Deep Research** - Conducts comprehensive research on the lead
+   - **Deep Research** - Conducts comprehensive research on the lead with a deep research agent
    - **Write Email** - Generates a personalized response email
    - **Human-in-the-Loop** - Sends to Slack for human approval before sending
 
@@ -36,7 +38,7 @@ Send email (on approval)
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 & App Router
+- **Framework**: Next.js App Router
 - **AI**: Vercel AI SDK with AI Gateway
 - **Human-in-the-Loop**: Slack Bolt + Vercel Slack Bolt adapter
 - **Deep Research** Exa.ai
@@ -49,6 +51,7 @@ Send email (on approval)
 - Node.js 20+
 - pnpm (recommended) or npm
 - Slack workspace with bot token and signing secret
+  - Reference the [Vercel slack agent template](https://github.com/vercel-partner-solutions/slack-agent-template) for creating a slack app
 - Vercel AI Gateway API Key
 
 ### Installation
@@ -69,19 +72,22 @@ pnpm install
 3. Set up environment variables:
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
 Configure the following variables:
 
 ```env
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
+# Vercel AI Gateway API Key
+AI_GATEWAY_API_KEY
 
-# Slack
-SLACK_BOT_TOKEN=xoxb-your-bot-token
-SLACK_SIGNING_SECRET=your-signing-secret
-SLACK_CHANNEL_ID=your-channel-id
+# Slack Bot
+SLACK_BOT_TOKEN
+SLACK_SIGNING_SECRET
+SLACK_CHANNEL_ID
+
+# Exa API Key
+EXA_API_KEY
 ```
 
 4. Run the development server:
@@ -106,14 +112,14 @@ lead-agent/
 │   ├── services.ts       # Core business logic (qualify, research, email)
 │   ├── slack.ts          # Slack integration
 │   └── types.ts          # TypeScript schemas and types
-└── components/ui/        # Reusable UI components
+└── components/ui/        # shadcn/ui
 ```
 
 ## Key Features
 
 ### Async Processing with `after()`
 
-The `/api/submit` endpoint leverages Next.js 15's `after()` function to return an immediate response while processing the lead in the background. This ensures a snappy user experience while complex AI operations happen asynchronously.
+The `/api/submit` endpoint leverages Next.js' `after()` function to return an immediate response while processing the lead in the background. This ensures a snappy user experience while complex AI operations happen asynchronously. **In a production environment, we recommend using a queue or durable execution workflow for this instead.**
 
 ### AI-Powered Qualification
 
@@ -125,10 +131,9 @@ Generated emails are sent to Slack with approve/reject buttons, ensuring human o
 
 ### Extensible Architecture
 
-- Easy to add new qualification categories
-- Pluggable knowledge base (Turbopuffer, Pinecone, Postgres, etc.)
-- Configurable research providers (Exa.ai, etc.)
-- Email provider agnostic (SendGrid, Mailgun, Resend, etc.)
+- Add new qualification categories in the `qualificationCategorySchema` in `types.ts`
+- Adjust the prompts and configuration for all AI calls
+- Add new service functions if needed
 
 ## Customization
 
@@ -144,7 +149,7 @@ export async function queryKnowledgeBase(query: string) {
 }
 ```
 
-### Adding Deep Research
+### Adjusting Deep Research
 
 Edit `lib/services.ts` in the `deepResearch` function:
 
