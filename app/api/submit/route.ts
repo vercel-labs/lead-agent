@@ -6,8 +6,15 @@ import {
   qualify,
   writeEmail
 } from '@/lib/services';
+import { checkBotId } from 'botid/server';
 
 export async function POST(request: Request) {
+  const verification = await checkBotId();
+
+  if (verification.isBot) {
+    return Response.json({ error: 'Access denied' }, { status: 403 });
+  }
+
   const body = await request.json();
   const parsedBody = formSchema.safeParse(body);
   if (!parsedBody.success) {

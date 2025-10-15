@@ -16,6 +16,7 @@
     "@slack/web-api": "^7.11.0",
     "@vercel/slack-bolt": "^1.0.2",
     "ai": "^5.0.68",
+    "botid": "^1.5.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "exa-js": "^1.10.2",
