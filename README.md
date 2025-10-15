@@ -1,6 +1,6 @@
 # Lead Agent
 
-An inbound lead qualification and research agent built with Next.js and hosted on Vercel AI cloud.
+An inbound lead qualification and research agent built with Next.js and hosted on the Vercel AI Cloud.
 
 ## Overview
 
