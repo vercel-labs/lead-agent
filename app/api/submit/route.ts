@@ -24,15 +24,16 @@ export async function POST(request: Request) {
 
   // in a production environment, we would use a queue to process the leads instead of using after
   after(async () => {
-    const qualification = await qualify(data);
+    const { text: research } = await researchAgent.generate({
+      prompt: `Research the lead: ${JSON.stringify(data)}`
+    });
+
+    const qualification = await qualify(data, research);
 
     if (
       qualification.category === 'QUALIFIED' ||
       qualification.category === 'FOLLOW_UP'
     ) {
-      const { text: research } = await researchAgent.generate({
-        prompt: `Research the lead: ${JSON.stringify(data)}`
-      });
       const email = await writeEmail(research, qualification);
       await humanFeedback(research, email, qualification);
     }
