@@ -2,6 +2,8 @@
 
 An inbound lead qualification and research agent built with Next.js and hosted on the Vercel AI Cloud.
 
+**_This is meant to serve as a reference architecture to be adapted to the needs of your specific organization._**
+
 ## Overview
 
 Lead agent app that captures a lead in a contact sales form and then kicks off a qualification workflow & agent.
@@ -9,10 +11,9 @@ Lead agent app that captures a lead in a contact sales form and then kicks off a
 **Overall this template is a reference architecture for how to build a lead agent on Vercel. Aspects of this project should be adjusted to meet your business' needs.**
 
 1. **Immediate Response** - Returns a success response to the user upon submission
-2. **Background Processing** - Uses Next.js `after()` to kick off asynchronous tasks:
+2. **Workflows** - Uses Vercel workflows to kick off durable background tasks
    - **Qualify Lead** - Uses `generateObject` to categorize the lead
-   - **Query Knowledge Base** - Retrieves relevant context from your knowledge base
-   - **Deep Research** - Conducts comprehensive research on the lead with a deep research agent
+   - **Deep Research Agent** - Conducts comprehensive research on the lead with a deep research agent
    - **Write Email** - Generates a personalized response email
    - **Human-in-the-Loop** - Sends to Slack for human approval before sending
 
@@ -23,9 +24,11 @@ User submits form
      ↓
 Immediate response
      ↓
-after() → Qualify lead
+start(workflow)
      ↓
 Research agent
+     ↓
+Qualify lead
      ↓
 Generate email
      ↓
@@ -36,11 +39,11 @@ Send email (on approval)
 
 ## Tech Stack
 
-- **Framework**: Next.js App Router
-- **AI**: Vercel AI SDK with AI Gateway
-- **Human-in-the-Loop**: Slack Bolt + Vercel Slack Bolt adapter
-- **Deep Research** Exa.ai
-- **Form Management**: React Hook Form + Zod validation & shadcn/ui
+- **Framework**: [Next.js App Router](https://nextjs.org)
+- **Durable execution**: [Vercel Workflows](http://useworkflow.dev/)
+- **AI**: [Vercel AI SDK](https://ai-sdk.dev/) with [AI Gateway](https://vercel.com/ai-gateway)
+- **Human-in-the-Loop**: [Slack Bolt + Vercel Slack Bolt adapter](https://vercel.com/templates/ai/slack-agent-template)
+- **Web Search** [Exa.ai](https://exa.ai/)
 
 ## Getting Started
 
@@ -50,14 +53,14 @@ Send email (on approval)
 - pnpm (recommended) or npm
 - Slack workspace with bot token and signing secret
   - Reference the [Vercel slack agent template](https://github.com/vercel-partner-solutions/slack-agent-template) for creating a slack app
-- Vercel AI Gateway API Key
+- [Vercel AI Gateway API Key](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%2Fapi-keys%3Futm_source%3Dai_gateway_landing_page&title=Get+an+API+Key)
 
 ### Installation
 
 1. Clone the repository:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/vercel-labs/lead-agent.git
 cd lead-agent
 ```
 
@@ -110,14 +113,18 @@ lead-agent/
 │   ├── services.ts       # Core business logic (qualify, research, email)
 │   ├── slack.ts          # Slack integration
 │   └── types.ts          # TypeScript schemas and types
-└── components/ui/        # shadcn/ui
+├── components/ui/        # shadcn/ui
+└── workflows/
+    └── inbound/          # inbound lead workflow
+        ├── index.ts      # exported workflow function
+        └── steps.ts      # workflow steps
 ```
 
 ## Key Features
 
-### Async Processing with `after()`
+### Workflow durable execution with `use workflow`
 
-The `/api/submit` endpoint leverages Next.js' `after()` function to return an immediate response while processing the lead in the background. This ensures a snappy user experience while complex AI operations happen asynchronously. **In a production environment, we recommend using a queue or durable execution workflow for this instead.**
+This project uses Vercel Workflows to kick off a workflow that runs the agent, qualification, and other actions.
 
 ### AI-Powered Qualification
 
@@ -144,21 +151,6 @@ Most of the logic lives in the `services.ts` and `api/submit/route.ts` files.
 ### Adjusting agent
 
 Edit the `researchAgent` in `lib/services.ts`.
-
-## Deployment
-
-Deploy to Vercel with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=<your-repo-url>)
-
-Or deploy manually:
-
-```bash
-pnpm build
-pnpm start
-```
-
-Make sure to set all environment variables in your deployment platform.
 
 ## License
 
