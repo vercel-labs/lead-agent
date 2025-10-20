@@ -17,13 +17,16 @@ import { exa } from '@/lib/exa';
 /**
  * Qualify the lead
  */
-export async function qualify(lead: FormSchema): Promise<QualificationSchema> {
+export async function qualify(
+  lead: FormSchema,
+  research: string
+): Promise<QualificationSchema> {
   const { object } = await generateObject({
-    model: 'openai/gpt-5-mini',
+    model: 'openai/gpt-5',
     schema: qualificationSchema,
-    prompt: `Qualify the lead and give a reason for the qualification based on the following information: ${JSON.stringify(
+    prompt: `Qualify the lead and give a reason for the qualification based on the following information: LEAD DATA: ${JSON.stringify(
       lead
-    )}`
+    )} and RESEARCH: ${research}`
   });
 
   return object;
@@ -37,7 +40,7 @@ export async function writeEmail(
   qualification: QualificationSchema
 ) {
   const { text } = await generateText({
-    model: 'openai/gpt-5-mini',
+    model: 'openai/gpt-5',
     prompt: `Write an email for a ${
       qualification.category
     } lead based on the following information: ${JSON.stringify(research)}`
@@ -74,6 +77,59 @@ export async function sendEmail(email: string) {
    * send email using provider like sendgrid, mailgun, resend etc.
    */
 }
+
+/**
+ * ------------------------------------------------------------
+ * Agent & Tools
+ * ------------------------------------------------------------
+ */
+
+/**
+ * Fetch tool
+ */
+export const fetchUrl = tool({
+  description: 'Return visible text from a public URL as Markdown.',
+  inputSchema: z.object({
+    url: z.string().describe('Absolute URL, including http:// or https://')
+  }),
+  execute: async ({ url }) => {
+    const result = await exa.getContents(url, {
+      text: true
+    });
+    return result;
+  }
+});
+
+/**
+ * CRM Search tool
+ */
+export const crmSearch = tool({
+  description:
+    'Search existing Vercel CRM for opportunities by company name or domain',
+  inputSchema: z.object({
+    name: z
+      .string()
+      .describe('The name of the company to search for (e.g. "Vercel")')
+  }),
+  execute: async ({ name }) => {
+    // fetch from CRM like Salesforce, Hubspot, or Snowflake, etc.
+    return [];
+  }
+});
+
+/**
+ * Tech-stack analysis tool
+ */
+export const techStackAnalysis = tool({
+  description: 'Return tech stack analysis for a domain.',
+  inputSchema: z.object({
+    domain: z.string().describe('Domain, e.g. "vercel.com"')
+  }),
+  execute: async ({ domain }) => {
+    // fetch the tech stack for the domain
+    return [];
+  }
+});
 
 /**
  * Search tool
@@ -139,20 +195,26 @@ const queryKnowledgeBase = tool({
  * This agent is used to research the lead and return a comprehensive report
  */
 export const researchAgent = new Agent({
-  model: 'openai/gpt-5-mini',
+  model: 'openai/gpt-5',
   system: `
   You are a researcher to find information about a lead. You are given a lead and you need to find information about the lead.
   
   You can use the tools provided to you to find information about the lead: 
   - search: Searches the web for information
   - queryKnowledgeBase: Queries the knowledge base for the given query
+  - fetchUrl: Fetches the contents of a public URL
+  - crmSearch: Searches the CRM for the given company name
+  - techStackAnalysis: Analyzes the tech stack of the given domain
   
   Synthesize the information you find into a comprehensive report.
   `,
   tools: {
     search,
-    queryKnowledgeBase
-    // add other tools here, ex: query CRM, snowflake, etc.
+    queryKnowledgeBase,
+    fetchUrl,
+    crmSearch,
+    techStackAnalysis
+    // add other tools here
   },
   stopWhen: [stepCountIs(20)] // stop after max 20 steps
 });
