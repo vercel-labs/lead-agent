@@ -6,7 +6,7 @@ An inbound lead qualification and research agent built with Next.js and hosted o
 
 ## Overview
 
-Lead agent app that captures a lead in a contact sales form and then kicks off a qualification workflow & agent.
+Lead agent app that captures a lead in a contact sales form and then kicks off a qualification workflow & deep research agent.
 
 **Overall this template is a reference architecture for how to build a lead agent on Vercel. Aspects of this project should be adjusted to meet your business' needs.**
 
@@ -21,8 +21,6 @@ Lead agent app that captures a lead in a contact sales form and then kicks off a
 
 ```
 User submits form
-     ↓
-Immediate response
      ↓
 start(workflow)
      ↓
@@ -54,6 +52,7 @@ Send email (on approval)
 - Slack workspace with bot token and signing secret
   - Reference the [Vercel slack agent template](https://github.com/vercel-partner-solutions/slack-agent-template) for creating a slack app
 - [Vercel AI Gateway API Key](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%2Fapi-keys%3Futm_source%3Dai_gateway_landing_page&title=Get+an+API+Key)
+- [Exa API key](https://exa.ai/)
 
 ### Installation
 
@@ -78,7 +77,7 @@ cp .env.example .env.local
 
 Configure the following variables:
 
-```env
+```bash
 # Vercel AI Gateway API Key
 AI_GATEWAY_API_KEY
 
@@ -97,7 +96,7 @@ EXA_API_KEY
 pnpm dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) to see the application.
+5. Open [http://localhost:3000](http://localhost:3000) to see the application and submit a test lead.
 
 ## Project Structure
 
@@ -105,19 +104,19 @@ pnpm dev
 lead-agent/
 ├── app/
 │   ├── api/
-│   │   ├── submit/       # Form submission endpoint with after()
-│   │   └── slack/        # Slack webhook handler
-│   ├── lead-form.tsx     # Main form component
+│   │   ├── submit/       # Form submission endpoint that kicks off workflow
+│   │   └── slack/        # Slack webhook handler (receives slack events)
 │   └── page.tsx          # Home page
 ├── lib/
 │   ├── services.ts       # Core business logic (qualify, research, email)
 │   ├── slack.ts          # Slack integration
 │   └── types.ts          # TypeScript schemas and types
-├── components/ui/        # shadcn/ui
+├── components
+│   ├── lead-form.tsx     # Main form component
 └── workflows/
-    └── inbound/          # inbound lead workflow
-        ├── index.ts      # exported workflow function
-        └── steps.ts      # workflow steps
+    └── inbound/          # Inbound lead workflow
+        ├── index.ts      # Exported workflow function
+        └── steps.ts      # Workflow steps
 ```
 
 ## Key Features
