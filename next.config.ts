@@ -6,4 +6,4 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@slack/bolt']
 };
 
-export default withBotId(withWorkflow(nextConfig));
+export default withWorkflow(withBotId(nextConfig));
