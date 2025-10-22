@@ -2,8 +2,7 @@
 
 <img width="1819" height="1738" alt="hero" src="https://github.com/user-attachments/assets/347757fd-ad00-487d-bdd8-97113f13878b" />
 
-
-An inbound lead qualification and research agent built with [Next.js](http://nextjs.org/), [AI SDK](https://ai-sdk.dev/), [Vercel Workflows](https://useworkflow.dev/), and the [Vercel Slack Adapter](https://github.com/vercel-labs/slack-bolt). Hosted on the [Vercel AI Cloud](https://vercel.com/blog/the-ai-cloud-a-unified-platform-for-ai-workloads).
+An inbound lead qualification and research agent built with [Next.js](http://nextjs.org/), [AI SDK](https://ai-sdk.dev/), [Workflow DevKit](https://useworkflow.dev/), and the [Vercel Slack Adapter](https://github.com/vercel-labs/slack-bolt). Hosted on the [Vercel AI Cloud](https://vercel.com/blog/the-ai-cloud-a-unified-platform-for-ai-workloads).
 
 **_This is meant to serve as a reference architecture to be adapted to the needs of your specific organization._**
 
@@ -12,7 +11,7 @@ An inbound lead qualification and research agent built with [Next.js](http://nex
 Lead agent app that captures a lead in a contact sales form and then kicks off a qualification workflow and deep research agent. It integrates with Slack to send and receive messages for human-in-the-loop feedback.
 
 - **Immediate Response** - Returns a success response to the user upon submission
-- **Workflows** - Uses Vercel Workflows to kick off durable background tasks
+- **Workflows** - Uses Workflow DevKit to kick off durable background tasks
   - **Deep Research Agent** - Conducts comprehensive research on the lead with a deep research agent
   - **Qualify Lead** - Uses `generateObject` to categorize the lead based on the lead data and research report
   - **Write Email** - Generates a personalized response email
@@ -27,11 +26,10 @@ Lead agent app that captures a lead in a contact sales form and then kicks off a
 
 <img width="1778" height="1958" alt="architecture" src="https://github.com/user-attachments/assets/53943961-4692-4b42-8e8d-47b03a01d233" />
 
-
 ```
 User submits form
      ↓
-start(workflow) ← (Vercel Workflows)
+start(workflow) ← (Workflow DevKit)
      ↓
 Research agent ← (AI SDK Agent)
      ↓
@@ -47,7 +45,7 @@ Send email (on approval)
 ## Tech Stack
 
 - **Framework**: [Next.js 16](https://nextjs.org)
-- **Durable execution**: [Vercel Workflows](http://useworkflow.dev/)
+- **Durable execution**: [Workflow DevKit](http://useworkflow.dev/)
 - **AI**: [Vercel AI SDK](https://ai-sdk.dev/) with [AI Gateway](https://vercel.com/ai-gateway)
 - **Human-in-the-Loop**: [Slack Bolt + Vercel Slack Bolt adapter](https://vercel.com/templates/ai/slack-agent-template)
 - **Web Search**: [Exa.ai](https://exa.ai/)
@@ -142,7 +140,7 @@ lead-agent/
 
 ### Workflow durable execution with `use workflow`
 
-This project uses [Vercel Workflows](https://useworkflow.dev) to kick off a workflow that runs the agent, qualification, and other actions.
+This project uses [Workflow DevKit](https://useworkflow.dev) to kick off a workflow that runs the agent, qualification, and other actions.
 
 ### AI-Powered Qualification
 
