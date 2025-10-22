@@ -1,6 +1,6 @@
 import { formSchema } from '@/lib/types';
 import { checkBotId } from 'botid/server';
-import { start } from '@vercel/workflow-core/runtime';
+import { start } from '@vercel/workflow/api';
 import { workflowInbound } from '@/workflows/inbound';
 
 export async function POST(request: Request) {
