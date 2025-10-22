@@ -16,6 +16,10 @@ Lead agent app that captures a lead in a contact sales form and then kicks off a
   - **Human-in-the-Loop** - Sends to Slack for human approval before sending
   - **Slack Webhook** - Catches a webhook event from Slack to approve or deny the email
 
+## Deploy with Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Flead-agent&env=AI_GATEWAY_API_KEY, SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET, SLACK_CHANNEL_ID,EXA_API_KEY&project-name=lead-agent&repository-name=lead-agent)
+
 ## Architecture
 
 ```
