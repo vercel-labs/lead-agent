@@ -68,6 +68,7 @@ Additionally, update prompts to meet the needs of your specific business functio
   - Reference the [Vercel Slack agent template docs](https://github.com/vercel-partner-solutions/slack-agent-template) for creating a Slack app
   - You can set the permissions and configuration for your Slack app in the `manifest.json` file in the root of this repo. Paste this manifest file into the Slack dashboard when creating the app
   - **Be sure to update the request URL for interactivity and event subscriptions to be your production domain URL**
+  - If Slack environment variables are not set, the app will still run with the Slack bot disabled
 - [Vercel AI Gateway API Key](https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%2Fapi-keys%3Futm_source%3Dai_gateway_landing_page&title=Get+an+API+Key)
 - [Exa API key](https://exa.ai/)
 

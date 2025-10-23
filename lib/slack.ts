@@ -4,20 +4,35 @@ import { VercelReceiver } from '@vercel/slack-bolt';
 const logLevel =
   process.env.NODE_ENV === 'development' ? LogLevel.DEBUG : LogLevel.INFO;
 
-export const receiver = new VercelReceiver({
-  logLevel
-});
+const hasSlackCredentials =
+  process.env.SLACK_BOT_TOKEN && process.env.SLACK_SIGNING_SECRET;
+
+if (!hasSlackCredentials) {
+  console.warn(
+    '⚠️  SLACK_BOT_TOKEN or SLACK_SIGNING_SECRET is not set. Slack integration will be disabled.'
+  );
+}
+
+// Only initialize Slack if credentials are available
+export const receiver = hasSlackCredentials
+  ? new VercelReceiver({
+      signingSecret: process.env.SLACK_SIGNING_SECRET!,
+      logLevel
+    })
+  : null;
 
 /**
  * Slack App instance
  */
-export const slackApp = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
-  receiver,
-  deferInitialization: true,
-  logLevel
-});
+export const slackApp = hasSlackCredentials
+  ? new App({
+      token: process.env.SLACK_BOT_TOKEN!,
+      signingSecret: process.env.SLACK_SIGNING_SECRET!,
+      receiver: receiver!,
+      deferInitialization: true,
+      logLevel
+    })
+  : null;
 
 /**
  * Send the research and qualification to the human for approval in slack
@@ -26,6 +41,12 @@ export async function sendSlackMessageWithButtons(
   channel: string,
   text: string
 ): Promise<{ messageTs: string; channel: string }> {
+  if (!slackApp) {
+    throw new Error(
+      'Slack app is not initialized. Please set SLACK_BOT_TOKEN and SLACK_SIGNING_SECRET environment variables.'
+    );
+  }
+
   // Ensure the app is initialized
   await slackApp.client.auth.test();
 
