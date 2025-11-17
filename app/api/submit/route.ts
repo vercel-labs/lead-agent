@@ -1,7 +1,6 @@
 import { formSchema } from '@/lib/types';
 import { checkBotId } from 'botid/server';
-import { start } from 'workflow/api';
-import { workflowInbound } from '@/workflows/inbound';
+import { processInboundLead } from '@/workflows/inbound';
 
 export async function POST(request: Request) {
   const verification = await checkBotId();
@@ -17,7 +16,10 @@ export async function POST(request: Request) {
     return Response.json({ error: parsedBody.error.message }, { status: 400 });
   }
 
-  await start(workflowInbound, [parsedBody.data]);
+  // Process lead asynchronously in the background
+  processInboundLead(parsedBody.data).catch((error) => {
+    console.error('Error processing lead:', error);
+  });
 
   return Response.json(
     { message: 'Form submitted successfully' },

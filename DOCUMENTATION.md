@@ -1,5 +1,7 @@
 # Lead Agent - Comprehensive Documentation
 
+> **⚠️ Note**: This documentation was created for an earlier version that used Vercel Workflow DevKit for durable execution. The codebase has been updated to remove Vercel-specific dependencies and now uses standard async processing. Some sections may reference outdated patterns like `'use workflow'` and `'use step'` directives, or `@vercel/slack-bolt`. Please refer to the current codebase and README.md for the most up-to-date implementation details.
+
 ## Table of Contents
 
 1. [Project Overview](#project-overview)

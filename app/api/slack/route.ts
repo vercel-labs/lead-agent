@@ -1,9 +1,8 @@
-import { createHandler } from '@vercel/slack-bolt';
-import { slackApp, receiver } from '@/lib/slack';
+import { slackApp } from '@/lib/slack';
 import { sendEmail } from '@/lib/services';
 
 // Only set up event handlers if Slack is initialized
-if (slackApp && receiver) {
+if (slackApp) {
   slackApp.event('app_mention', async ({ event, client, logger }) => {
     await client.chat.postMessage({
       channel: event.channel,
@@ -30,10 +29,35 @@ if (slackApp && receiver) {
   );
 }
 
-export const POST =
-  slackApp && receiver
-    ? createHandler(slackApp, receiver)
-    : () =>
-        new Response('Slack credentials not configured', {
-          status: 503
-        });
+export async function POST(request: Request) {
+  if (!slackApp) {
+    return new Response('Slack credentials not configured', { status: 503 });
+  }
+
+  try {
+    const body = await request.text();
+    const headers = {
+      'x-slack-signature': request.headers.get('x-slack-signature') || '',
+      'x-slack-request-timestamp':
+        request.headers.get('x-slack-request-timestamp') || '',
+      'content-type': request.headers.get('content-type') || ''
+    };
+
+    // Process the event using Slack Bolt
+    const result = await slackApp.processEvent({
+      body,
+      headers,
+      // @ts-ignore - ack and respond are handled by Bolt internally
+      ack: async (response: any) => response,
+      respond: async (response: any) => response
+    });
+
+    return new Response(result?.body || '', {
+      status: result?.statusCode || 200,
+      headers: result?.headers || {}
+    });
+  } catch (error) {
+    console.error('Error processing Slack event:', error);
+    return new Response('Internal Server Error', { status: 500 });
+  }
+}

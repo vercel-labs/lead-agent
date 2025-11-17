@@ -7,7 +7,7 @@ import {
 } from './steps';
 
 /**
- * workflow to handle the inbound lead
+ * Handle the inbound lead processing
  * - research the lead
  * - qualify the lead
  * - if the lead is qualified or follow up:
@@ -17,19 +17,22 @@ import {
  * - if the lead is not qualified or follow up:
  *   - take other actions here based on other qualification categories
  */
-export const workflowInbound = async (data: FormSchema) => {
-  'use workflow';
+export const processInboundLead = async (data: FormSchema) => {
+  try {
+    const research = await stepResearch(data);
+    const qualification = await stepQualify(data, research);
 
-  const research = await stepResearch(data);
-  const qualification = await stepQualify(data, research);
+    if (
+      qualification.category === 'QUALIFIED' ||
+      qualification.category === 'FOLLOW_UP'
+    ) {
+      const email = await stepWriteEmail(research, qualification);
+      await stepHumanFeedback(research, email, qualification);
+    }
 
-  if (
-    qualification.category === 'QUALIFIED' ||
-    qualification.category === 'FOLLOW_UP'
-  ) {
-    const email = await stepWriteEmail(research, qualification);
-    await stepHumanFeedback(research, email, qualification);
+    // take other actions here based on other qualification categories
+  } catch (error) {
+    console.error('Error processing inbound lead:', error);
+    throw error;
   }
-
-  // take other actions here based on other qualification categories
 };

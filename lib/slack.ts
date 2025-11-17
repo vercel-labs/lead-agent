@@ -1,5 +1,4 @@
 import { App, LogLevel } from '@slack/bolt';
-import { VercelReceiver } from '@vercel/slack-bolt';
 
 const logLevel =
   process.env.NODE_ENV === 'development' ? LogLevel.DEBUG : LogLevel.INFO;
@@ -13,14 +12,6 @@ if (!hasSlackCredentials) {
   );
 }
 
-// Only initialize Slack if credentials are available
-export const receiver = hasSlackCredentials
-  ? new VercelReceiver({
-      signingSecret: process.env.SLACK_SIGNING_SECRET!,
-      logLevel
-    })
-  : null;
-
 /**
  * Slack App instance
  */
@@ -28,8 +19,6 @@ export const slackApp = hasSlackCredentials
   ? new App({
       token: process.env.SLACK_BOT_TOKEN!,
       signingSecret: process.env.SLACK_SIGNING_SECRET!,
-      receiver: receiver!,
-      deferInitialization: true,
       logLevel
     })
   : null;
