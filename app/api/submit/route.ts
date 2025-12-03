@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     return Response.json({ error: parsedBody.error.message }, { status: 400 });
   }
 
+  // doesnt do anything in demo
   // await start(workflowInbound, [parsedBody.data]);
 
   return Response.json(
