@@ -46,3 +46,6 @@ next-env.d.ts
 
 # misc
 .swc
+
+# env files
+.env*.local
