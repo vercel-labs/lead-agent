@@ -10,8 +10,7 @@ import {
   FieldLabel
 } from '@/components/ui/field';
 import { toast } from 'sonner';
-import { Download, Users, Loader2 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Download, Users } from 'lucide-react';
 import type {
   ExaSearchResponse,
   ExaSearchResult,
@@ -32,9 +31,6 @@ export function ExaSearchForm() {
   const [enrichedResults, setEnrichedResults] = useState<EnrichedExaResult[] | null>(
     null
   );
-  const [includePhones, setIncludePhones] = useState(false);
-  const [phoneEnrichmentPending, setPhoneEnrichmentPending] = useState(false);
-  const [phoneJobIds, setPhoneJobIds] = useState<Map<string, string>>(new Map());
 
   async function handleSearch() {
     if (!query.trim()) {
@@ -102,8 +98,7 @@ export function ExaSearchForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companies: topCompanies,
-          limit: apolloLimit,
-          includePhones
+          limit: apolloLimit
         })
       });
 
@@ -128,22 +123,6 @@ export function ExaSearchForm() {
       toast.success(
         `Enriched ${enrichedCount} of ${apolloLimit} companies with Apollo data`
       );
-
-      // Check if phone enrichment was requested and start polling
-      if (includePhones) {
-        const jobIds = new Map<string, string>();
-        data.results.forEach((result: any) => {
-          if (result.phoneJobId) {
-            jobIds.set(result.phoneJobId, result.url);
-          }
-        });
-
-        if (jobIds.size > 0) {
-          setPhoneJobIds(jobIds);
-          setPhoneEnrichmentPending(true);
-          pollPhoneEnrichment(jobIds);
-        }
-      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Enrichment failed';
       setError(errorMessage);
@@ -151,71 +130,6 @@ export function ExaSearchForm() {
     } finally {
       setIsEnriching(false);
     }
-  }
-
-  async function pollPhoneEnrichment(jobIds: Map<string, string>) {
-    const maxAttempts = 30; // 60 seconds total
-    let attempts = 0;
-
-    const poll = async () => {
-      attempts++;
-      const completedJobs = new Set<string>();
-
-      for (const [jobId, url] of jobIds.entries()) {
-        try {
-          const response = await fetch(`/api/phone-enrichment-status/${jobId}`);
-          const data = await response.json();
-
-          if (data.status === 'completed') {
-            completedJobs.add(jobId);
-
-            // Merge phone data into enrichedResults
-            setEnrichedResults((prev) => {
-              if (!prev) return prev;
-              return prev.map((result) => {
-                if (result.url === url) {
-                  return {
-                    ...result,
-                    apolloContacts: result.apolloContacts?.map((contact) => {
-                      const enriched = data.contacts.find(
-                        (c: any) => c.name === contact.name
-                      );
-                      return enriched && enriched.phone
-                        ? { ...contact, phone: enriched.phone }
-                        : contact;
-                    }),
-                  };
-                }
-                return result;
-              });
-            });
-          } else if (data.status === 'failed') {
-            completedJobs.add(jobId);
-            console.error(`Phone enrichment failed for job ${jobId}:`, data.error);
-          }
-        } catch (error) {
-          console.error(`Error polling job ${jobId}:`, error);
-        }
-      }
-
-      // Remove completed jobs
-      completedJobs.forEach((jobId) => jobIds.delete(jobId));
-
-      // Check completion or timeout
-      if (jobIds.size === 0) {
-        setPhoneEnrichmentPending(false);
-        setPhoneJobIds(new Map());
-        toast.success('Phone numbers enriched successfully');
-      } else if (attempts >= maxAttempts) {
-        setPhoneEnrichmentPending(false);
-        setPhoneJobIds(new Map());
-        toast.error('Phone enrichment timed out - some numbers may be missing');
-      } else {
-        setTimeout(poll, 2000); // Poll again in 2 seconds
-      }
-    };
-
-    poll();
   }
 
   function handleExportCSV() {
@@ -371,19 +285,6 @@ export function ExaSearchForm() {
               Enriching top {apolloLimit} companies by relevance score
             </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="include-phones"
-              checked={includePhones}
-              onCheckedChange={(checked) => setIncludePhones(!!checked)}
-            />
-            <label
-              htmlFor="include-phones"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Include phone numbers (takes longer)
-            </label>
-          </div>
           <Button
             onClick={handleApolloEnrich}
             disabled={isEnriching}
@@ -408,23 +309,10 @@ export function ExaSearchForm() {
                 </span>
               )}
             </h2>
-            <div className="flex flex-col items-end gap-2">
-              {phoneEnrichmentPending && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Pulling phone numbers... this may take a moment
-                </div>
-              )}
-              <Button
-                onClick={handleExportCSV}
-                variant="outline"
-                className="gap-2"
-                disabled={phoneEnrichmentPending}
-              >
-                <Download className="h-4 w-4" />
-                Export to CSV
-              </Button>
-            </div>
+            <Button onClick={handleExportCSV} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export to CSV
+            </Button>
           </div>
 
           <div className="grid gap-4">
@@ -528,14 +416,6 @@ export function ExaSearchForm() {
                                 className="text-xs text-primary hover:underline block"
                               >
                                 {contact.email}
-                              </a>
-                            )}
-                            {contact.phone && (
-                              <a
-                                href={`tel:${contact.phone}`}
-                                className="text-xs text-primary hover:underline block"
-                              >
-                                {contact.phone}
                               </a>
                             )}
                             {contact.linkedin_url && (
