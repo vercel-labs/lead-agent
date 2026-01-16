@@ -1,5 +1,5 @@
 import {
-  humanFeedback,
+  humanFeedbackRouter,
   qualify,
   researchAgent,
   writeEmail
@@ -52,13 +52,6 @@ export const stepHumanFeedback = async (
 ) => {
   'use step';
 
-  if (!process.env.SLACK_BOT_TOKEN || !process.env.SLACK_SIGNING_SECRET) {
-    console.warn(
-      '⚠️  SLACK_BOT_TOKEN or SLACK_SIGNING_SECRET is not set, skipping human feedback step'
-    );
-    return;
-  }
-
-  const slackMessage = await humanFeedback(research, email, qualification);
-  return slackMessage;
+  const result = await humanFeedbackRouter(research, email, qualification);
+  return result;
 };
