@@ -122,6 +122,57 @@ pnpm dev
 
 5. Open [http://localhost:3000](http://localhost:3000) to see the application and submit a test lead.
 
+## CLI Usage
+
+### Terminal-Based Approval Workflow
+
+Run the interactive CLI to submit leads and approve emails directly in your terminal:
+
+```bash
+npm run cli
+```
+
+The CLI will:
+
+1. Prompt you for lead information (name, email, company, message)
+2. Run the research agent (displays AI research results)
+3. Run qualification (displays category and reasoning)
+4. Generate email (displays the AI-generated email)
+5. Prompt you to approve or reject the email
+6. Log the decision (no actual email sending in this mode)
+
+**Requirements:**
+
+- `AI_GATEWAY_API_KEY` - Required for AI SDK calls
+- `EXA_API_KEY` - Required for web research
+- No Next.js server needed - runs standalone!
+
+Set these in your `.env` or `.env.local` file:
+
+```bash
+cp .env.example .env
+# Edit .env and add your API keys
+```
+
+### Approval Modes
+
+Configure via `APPROVAL_MODE` environment variable to control how approvals are handled:
+
+- **`slack`** - Use Slack for approval (default if Slack credentials are set)
+- **`terminal`** - Use interactive CLI for approval (great for development and testing)
+- **`none`** - Skip approval step entirely
+
+```bash
+# In .env.local
+APPROVAL_MODE=terminal
+```
+
+The system automatically detects the approval mode:
+
+- If Slack credentials are set and `APPROVAL_MODE` is not specified, defaults to Slack
+- If `APPROVAL_MODE=terminal`, uses CLI approval
+- If `APPROVAL_MODE=none`, skips the approval step
+
 ## Project Structure
 
 ```

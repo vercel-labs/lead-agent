@@ -8,7 +8,9 @@ import {
 import {
   FormSchema,
   QualificationSchema,
-  qualificationSchema
+  qualificationSchema,
+  ApprovalMode,
+  ApprovalRequest
 } from '@/lib/types';
 import { sendSlackMessageWithButtons } from '@/lib/slack';
 import { z } from 'zod';
@@ -24,9 +26,19 @@ export async function qualify(
   const { object } = await generateObject({
     model: 'openai/gpt-5',
     schema: qualificationSchema,
-    prompt: `Qualify the lead and give a reason for the qualification based on the following information: LEAD DATA: ${JSON.stringify(
-      lead
-    )} and RESEARCH: ${research}`
+    prompt: `You are qualifying leads for a penetration testing company. Analyze the lead and research to determine if they're a good fit for pentesting services.
+
+LEAD DATA: ${JSON.stringify(lead)}
+
+RESEARCH: ${research}
+
+Qualification Criteria:
+- QUALIFIED: Company has clear security needs (compliance, funding, complex tech stack, recent breach, hiring security roles)
+- FOLLOW_UP: Potential fit but needs more information (unclear budget, timeline, or authority)
+- SUPPORT: Asking technical/presales questions, not ready to buy yet
+- UNQUALIFIED: No budget, no security needs, or outside target market
+
+Give a detailed reason explaining the qualification decision based on the research findings.`
   });
 
   return object;
@@ -41,9 +53,23 @@ export async function writeEmail(
 ) {
   const { text } = await generateText({
     model: 'openai/gpt-5',
-    prompt: `Write an email for a ${
-      qualification.category
-    } lead based on the following information: ${JSON.stringify(research)}`
+    prompt: `Write a personalized outreach email for a penetration testing services lead.
+
+QUALIFICATION: ${qualification.category}
+REASON: ${qualification.reason}
+
+RESEARCH FINDINGS: ${research}
+
+Email Guidelines:
+- Keep it concise (3-4 short paragraphs max)
+- Reference specific details from the research (funding, compliance needs, recent news, tech stack, etc.)
+- Position pentesting as a solution to their specific needs
+- For QUALIFIED leads: Propose a discovery call or scoping session
+- For FOLLOW_UP leads: Ask clarifying questions to move them forward
+- Use a consultative, helpful tone (not salesy)
+- Include a clear call-to-action
+
+Write the email body only (no subject line needed).`
   });
 
   return text;
@@ -79,6 +105,86 @@ export async function sendEmail(email: string) {
 }
 
 /**
+ * Get approval mode from environment
+ */
+function getApprovalMode(): ApprovalMode {
+  const mode = process.env.APPROVAL_MODE?.toLowerCase();
+
+  if (mode === 'terminal' || mode === 'none') {
+    return mode;
+  }
+
+  // Default to slack if credentials exist
+  if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_SIGNING_SECRET) {
+    return 'slack';
+  }
+
+  return 'terminal';
+}
+
+/**
+ * Terminal-based human feedback
+ */
+export async function terminalHumanFeedback(
+  research: string,
+  email: string,
+  qualification: QualificationSchema
+): Promise<string> {
+  const { randomUUID } = await import('crypto');
+  const { approvalStoreService } = await import('./approval-store');
+
+  const approvalId = randomUUID();
+
+  const approvalRequest: ApprovalRequest = {
+    id: approvalId,
+    research,
+    email,
+    qualification,
+    timestamp: Date.now(),
+    status: 'pending',
+    mode: 'terminal'
+  };
+
+  await approvalStoreService.create(approvalRequest);
+
+  console.log(`\n📋 Approval required: ${approvalId}`);
+  console.log(`⏳ Waiting for terminal approval...\n`);
+
+  const status = await approvalStoreService.waitForApproval(approvalId);
+
+  if (status === 'approved') {
+    console.log('✅ Email approved!');
+    return approvalId;
+  } else {
+    console.log('❌ Email rejected');
+    throw new Error('Email rejected by user');
+  }
+}
+
+/**
+ * Route to appropriate human feedback method
+ */
+export async function humanFeedbackRouter(
+  research: string,
+  email: string,
+  qualification: QualificationSchema
+) {
+  const mode = getApprovalMode();
+
+  switch (mode) {
+    case 'slack':
+      return await humanFeedback(research, email, qualification);
+    case 'terminal':
+      return await terminalHumanFeedback(research, email, qualification);
+    case 'none':
+      console.log('⚠️  Approval mode set to "none", skipping approval');
+      return null;
+    default:
+      throw new Error(`Unknown approval mode: ${mode}`);
+  }
+}
+
+/**
  * ------------------------------------------------------------
  * Agent & Tools
  * ------------------------------------------------------------
@@ -101,19 +207,95 @@ export const fetchUrl = tool({
 });
 
 /**
- * CRM Search tool
+ * Pentesting lead finder tool
  */
-export const crmSearch = tool({
+export const findPentestingLeads = tool({
   description:
-    'Search existing Vercel CRM for opportunities by company name or domain',
+    'Find companies that likely need pentesting services based on industry, funding, compliance requirements, or recent security events',
   inputSchema: z.object({
-    name: z
+    industry: z
       .string()
-      .describe('The name of the company to search for (e.g. "Vercel")')
+      .optional()
+      .describe('Industry to target (e.g. "healthcare", "finance", "SaaS")'),
+    signal: z
+      .enum([
+        'recent_funding',
+        'compliance_requirement',
+        'data_breach',
+        'ipo_filing',
+        'hiring_security',
+        'government_contract'
+      ])
+      .optional()
+      .describe('Signal indicating pentesting need')
   }),
-  execute: async ({ name }) => {
-    // fetch from CRM like Salesforce, Hubspot, or Snowflake, etc.
-    return [];
+  execute: async ({ industry, signal }) => {
+    // Build search query based on signals
+    const queries = [];
+
+    if (signal === 'recent_funding') {
+      queries.push(
+        `${industry || ''} Series A funding announcement security audit pentesting`.trim()
+      );
+    } else if (signal === 'compliance_requirement') {
+      queries.push(
+        `${industry || ''} SOC 2 compliance penetration testing`.trim()
+      );
+      queries.push(
+        `${industry || ''} ISO 27001 security assessment`.trim()
+      );
+    } else if (signal === 'data_breach') {
+      queries.push(
+        `${industry || ''} data breach incident response penetration test`.trim()
+      );
+    } else if (signal === 'ipo_filing') {
+      queries.push(
+        `${industry || ''} IPO filing S-1 security penetration testing`.trim()
+      );
+    } else if (signal === 'hiring_security') {
+      queries.push(
+        `${industry || ''} hiring CISO security engineer penetration testing`.trim()
+      );
+    } else if (signal === 'government_contract') {
+      queries.push('government RFP penetration testing cybersecurity');
+    } else {
+      // Default: companies looking for pentesting
+      queries.push(
+        `${industry || ''} penetration testing services needed`.trim()
+      );
+    }
+
+    // Use Exa to search for leads
+    const results = await Promise.all(
+      queries.map(async (query) => {
+        try {
+          const searchResults = await exa.searchAndContents(query, {
+            numResults: 3,
+            type: 'keyword',
+            category: 'company',
+            summary: true
+          });
+          return searchResults;
+        } catch (error) {
+          console.error(`Search failed for query: ${query}`, error);
+          return { results: [] };
+        }
+      })
+    );
+
+    // Format results as lead intelligence
+    const leads = results.flatMap((result: any) =>
+      (result.results || []).map((item: any) => ({
+        company: item.title,
+        url: item.url,
+        summary: item.summary || item.text?.slice(0, 300),
+        relevance: signal || 'general'
+      }))
+    );
+
+    return leads.length > 0
+      ? leads
+      : 'No pentesting leads found for the given criteria. Try different industry or signal.';
   }
 });
 
@@ -151,7 +333,6 @@ const search = tool({
         'github',
         'tweet',
         'personal site',
-        'linkedin profile',
         'financial report'
       ])
       .describe('The category of the result you are looking for')
@@ -197,22 +378,30 @@ const queryKnowledgeBase = tool({
 export const researchAgent = new Agent({
   model: 'openai/gpt-5',
   system: `
-  You are a researcher to find information about a lead. You are given a lead and you need to find information about the lead.
-  
-  You can use the tools provided to you to find information about the lead: 
-  - search: Searches the web for information
+  You are a researcher specializing in finding potential pentesting clients. You are given a lead and you need to research them to determine if they're a good fit for penetration testing services.
+
+  You can use the tools provided to you to find information about the lead:
+  - search: Searches the web for information about companies, news, funding, etc.
   - queryKnowledgeBase: Queries the knowledge base for the given query
   - fetchUrl: Fetches the contents of a public URL
-  - crmSearch: Searches the CRM for the given company name
+  - findPentestingLeads: Finds companies that likely need pentesting based on signals like funding, compliance, breaches, etc.
   - techStackAnalysis: Analyzes the tech stack of the given domain
-  
-  Synthesize the information you find into a comprehensive report.
+
+  Focus on finding:
+  1. Company size and industry (healthcare, finance, SaaS are high-value)
+  2. Recent funding rounds or IPO filings (triggers security audits)
+  3. Compliance requirements (SOC 2, ISO 27001, HIPAA, PCI-DSS)
+  4. Recent security incidents or data breaches
+  5. Job postings for security roles (CISO, Security Engineer)
+  6. Tech stack complexity (more complex = more attack surface)
+
+  Synthesize the information you find into a comprehensive report that helps qualify the lead for pentesting services.
   `,
   tools: {
     search,
     queryKnowledgeBase,
     fetchUrl,
-    crmSearch,
+    findPentestingLeads,
     techStackAnalysis
     // add other tools here
   },

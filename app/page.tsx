@@ -1,18 +1,18 @@
-import { LeadForm } from '@/components/lead-form';
-import { Bot, Workflow } from 'lucide-react';
+import { ExaSearchForm } from '@/components/exa-search-form';
+import { Search, Database } from 'lucide-react';
 
 export default function Home() {
   return (
     <main className="p-8">
       <div className="flex items-center justify-center gap-2">
-        <h1 className="text-2xl font-bold text-center">Lead Agent</h1>
+        <h1 className="text-2xl font-bold text-center">Exa Company Search</h1>
         <div className="flex items-center justify-center">
-          <Bot />
-          <Workflow />
+          <Search />
+          <Database />
         </div>
       </div>
 
-      <LeadForm />
+      <ExaSearchForm />
     </main>
   );
 }
