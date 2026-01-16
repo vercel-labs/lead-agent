@@ -54,12 +54,7 @@ export class ApolloClient {
     const url = `${this.baseUrl}/mixed_people/api_search?${params.toString()}`;
 
     console.log("\n=== Apollo API Request ===");
-    console.log("URL:", url);
     console.log("Domain:", companyDomain);
-    console.log(
-      "API Key (first 10 chars):",
-      this.apiKey?.substring(0, 10) + "..."
-    );
 
     try {
       const response = await fetch(url, {
@@ -72,8 +67,6 @@ export class ApolloClient {
         },
         body: JSON.stringify({}), // Empty body - params are in URL
       });
-
-      console.log("Response Status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -102,7 +95,7 @@ export class ApolloClient {
             person.organization_name || person.organization?.name || null,
           has_email: person.has_email || false,
           has_direct_phone: person.has_direct_phone || false,
-        })
+        }),
       );
 
       if (contacts.length > 0) {
@@ -115,7 +108,7 @@ export class ApolloClient {
         });
       } else {
         console.log(
-          "No contacts found - this might be expected for smaller companies"
+          "No contacts found - this might be expected for smaller companies",
         );
       }
       console.log("=== End Apollo API Request ===\n");
@@ -128,12 +121,12 @@ export class ApolloClient {
   }
 
   async bulkEnrichPeople(
-    people: { id: string; first_name: string; last_name: string }[]
+    people: { id: string; first_name: string; last_name: string }[],
   ): Promise<ApolloContact[]> {
     // Build URL with query parameters for reveal flags
     // Note: Only requesting emails - phone requires webhook
     const params = new URLSearchParams({
-      reveal_personal_emails: 'true',
+      reveal_personal_emails: "true",
     });
 
     const url = `${this.baseUrl}/people/bulk_match?${params.toString()}`;
@@ -153,10 +146,6 @@ export class ApolloClient {
     console.log("\n=== Apollo Bulk Enrichment Request ===");
     console.log("URL:", url);
     console.log("People to enrich:", people.length);
-    console.log(
-      "API Key (first 10 chars):",
-      this.apiKey?.substring(0, 10) + "..."
-    );
 
     try {
       const response = await fetch(url, {
@@ -170,13 +159,11 @@ export class ApolloClient {
         body: JSON.stringify(body),
       });
 
-      console.log("Response Status:", response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Apollo Enrichment API Error Response:", errorText);
         throw new Error(
-          `Apollo enrichment error: ${response.status} - ${errorText}`
+          `Apollo enrichment error: ${response.status} - ${errorText}`,
         );
       }
 
@@ -200,7 +187,7 @@ export class ApolloClient {
           linkedin_url: match.linkedin_url || null,
           organization_name:
             match.organization?.name || match.organization_name || null,
-        })
+        }),
       );
 
       if (enrichedContacts.length > 0) {
@@ -222,7 +209,7 @@ export class ApolloClient {
 
   async bulkEnrichPhonesWithWebhook(
     people: { id: string; first_name: string; last_name: string }[],
-    webhookUrl: string
+    webhookUrl: string,
   ): Promise<void> {
     // Build URL with query parameters for phone reveal and webhook
     const params = new URLSearchParams({
@@ -248,10 +235,6 @@ export class ApolloClient {
     console.log("URL:", url);
     console.log("Webhook URL:", webhookUrl);
     console.log("People to enrich:", people.length);
-    console.log(
-      "API Key (first 10 chars):",
-      this.apiKey?.substring(0, 10) + "..."
-    );
 
     try {
       const response = await fetch(url, {
@@ -265,17 +248,17 @@ export class ApolloClient {
         body: JSON.stringify(body),
       });
 
-      console.log("Response Status:", response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Apollo Phone Enrichment API Error Response:", errorText);
         throw new Error(
-          `Apollo phone enrichment error: ${response.status} - ${errorText}`
+          `Apollo phone enrichment error: ${response.status} - ${errorText}`,
         );
       }
 
-      console.log("Phone enrichment request accepted - webhook will be called when ready");
+      console.log(
+        "Phone enrichment request accepted - webhook will be called when ready",
+      );
       console.log("=== End Apollo Phone Enrichment Request ===\n");
     } catch (error) {
       console.error("Apollo phone enrichment error:", error);
