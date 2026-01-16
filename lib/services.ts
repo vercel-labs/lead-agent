@@ -12,7 +12,6 @@ import {
   ApprovalMode,
   ApprovalRequest
 } from '@/lib/types';
-import { sendSlackMessageWithButtons } from '@/lib/slack';
 import { z } from 'zod';
 import { exa } from '@/lib/exa';
 
@@ -76,26 +75,6 @@ Write the email body only (no subject line needed).`
 }
 
 /**
- * Send the research and qualification to the human for approval in slack
- */
-export async function humanFeedback(
-  research: string,
-  email: string,
-  qualification: QualificationSchema
-) {
-  const message = `*New Lead Qualification*\n\n*Email:* ${email}\n*Category:* ${
-    qualification.category
-  }\n*Reason:* ${qualification.reason}\n\n*Research:*\n${research.slice(
-    0,
-    500
-  )}...\n\n*Please review and approve or reject this email*`;
-
-  const slackChannel = process.env.SLACK_CHANNEL_ID || '';
-
-  return await sendSlackMessageWithButtons(slackChannel, message);
-}
-
-/**
  * Send an email
  */
 export async function sendEmail(email: string) {
@@ -112,11 +91,6 @@ function getApprovalMode(): ApprovalMode {
 
   if (mode === 'terminal' || mode === 'none') {
     return mode;
-  }
-
-  // Default to slack if credentials exist
-  if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_SIGNING_SECRET) {
-    return 'slack';
   }
 
   return 'terminal';
@@ -172,8 +146,6 @@ export async function humanFeedbackRouter(
   const mode = getApprovalMode();
 
   switch (mode) {
-    case 'slack':
-      return await humanFeedback(research, email, qualification);
     case 'terminal':
       return await terminalHumanFeedback(research, email, qualification);
     case 'none':
